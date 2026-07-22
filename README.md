@@ -6,6 +6,7 @@ Follow these steps to create and run the project.
 
 If you haven't already created one, run:
 
+
 ```cmd
 python -m venv venv
 ```
@@ -39,3 +40,5 @@ Once the server starts, open:
 - **API:** http://127.0.0.1:8000
 - **Swagger UI:** http://127.0.0.1:8000/docs
 - **ReDoc:** http://127.0.0.1:8000/redoc
+
+  <img width="941" height="472" alt="github_upload" src="https://github.com/user-attachments/assets/0cbc808d-3c7e-46bd-adf1-edd3dcaf0b07" />
