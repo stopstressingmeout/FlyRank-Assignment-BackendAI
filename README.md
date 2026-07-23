@@ -6,6 +6,7 @@ Follow these steps to create and run the project.
 
 If you haven't already created one, run:
 
+
 ```cmd
 python -m venv venv
 ```
@@ -39,7 +40,3 @@ Once the server starts, open:
 - **API:** http://127.0.0.1:8000
 - **Swagger UI:** http://127.0.0.1:8000/docs
 - **ReDoc:** http://127.0.0.1:8000/redoc
-
-## Persistence Observation
-
-After restarting the FastAPI server, the tasks created during runtime were lost and only the original seeded tasks remained. This happens because the application stores data in memory instead of a persistent database, so all runtime changes are discarded when the server stops.
