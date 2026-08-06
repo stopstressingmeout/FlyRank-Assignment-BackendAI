@@ -27,10 +27,16 @@ pip install "fastapi[standard]"
 
 ## 4. Start the FastAPI Development Server
 
-Since the application entry point (`main.py`) is located inside the `task_0` directory, run:
+Since the application entry point (`main.py`) is located at the project root, run:
 
 ```cmd
-fastapi dev task_0/main.py
+fastapi dev main.py
+```
+
+Alternatively, start the app with `uvicorn`:
+
+```cmd
+uvicorn main:app --reload
 ```
 
 ## 5. Access the API
