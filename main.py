@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from copy import deepcopy
@@ -7,8 +8,6 @@ app = FastAPI(
     description="A simple CRUD API for managing tasks built with FastAPI.",
     version="1.0.0"
 )
-
-# In-memory database
 initial_tasks = [
     {
         "id": 1,
@@ -26,6 +25,28 @@ initial_tasks = [
         "done": True
     }
 ]
+connection = sqlite3.connect("tasks.db")
+cursor = connection.cursor()
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY,
+        title TEXT,
+        done BOOLEAN
+    )
+""")
+cursor.execute("SELECT COUNT(*) FROM tasks")
+result = cursor.fetchone()
+if result[0] == 0:
+    for task in initial_tasks:
+        cursor.execute(
+            "INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)",
+            (task["id"], task["title"], task["done"])
+        )
+
+    connection.commit()
+
+# In-memory database
 
 tasks=deepcopy(initial_tasks)
 current_id=len(tasks)    
@@ -50,19 +71,25 @@ def health_check():
 
 
 @app.get("/tasks",tags=["Tasks"],summary="Get filtered tasks",description="Returns a list of filtered tasks.")
-def get_tasks(done:bool=None,search:str=None):
-    filtered_tasks=tasks
-    if done is not None:
-        filtered_tasks=[
-        task for task in filtered_tasks
-        if task["done"]==done
-        ]
-    if search is not None:
-        filtered_tasks=[
-            task for task in filtered_tasks
-            if search.lower() in task["title"].lower()
-                ]
-    return filtered_tasks
+def get_tasks(done: bool = None, search: str = None):
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM tasks")
+    rows = cursor.fetchall()
+
+    formatted_tasks = []
+
+    for row in rows:
+        task = {
+            "id": row[0],
+            "title": row[1],
+            "done": bool(row[2])
+        }
+
+        formatted_tasks.append(task)
+
+    return formatted_tasks
+
 
 @app.get("/tasks/{task_id}",
     tags=["Tasks"],
