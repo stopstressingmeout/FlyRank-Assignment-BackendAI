@@ -1,7 +1,6 @@
 import sqlite3
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-from copy import deepcopy
 
 app = FastAPI(
     title="Task API",
@@ -45,13 +44,7 @@ if result[0] == 0:
         )
 
     connection.commit()
-
-# In-memory database
-
-tasks=deepcopy(initial_tasks)
-current_id=len(tasks)    
-
-
+    
 class TaskCreate(BaseModel):
     title: str
 
@@ -239,30 +232,52 @@ def delete_task(task_id: int):
     connection.commit()
 
     return
-@app.get("/stats",tags=["Tasks"],summary="Get task statistics",description="Returns statistics about the tasks.")
-def get_tasks():
-    total=len(tasks)
-    done=0
-    for task in tasks:
-        if task["done"]:
-            done+=1
+@app.get(
+    "/stats",
+    tags=["Tasks"],
+    summary="Get task statistics",
+    description="Returns statistics about the tasks."
+)
+def get_stats():
 
-    open_tasks=total-done
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM tasks")
+    total_result = cursor.fetchone()
+    total = total_result[0]
+
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
+    done_result = cursor.fetchone()
+    done = done_result[0]
+
+    open_tasks = total - done
+
     return {
-        "total tasks":total,
-        "done":done,
-        "open":open_tasks
+        "total tasks": total,
+        "done": done,
+        "open": open_tasks
     }
-
 @app.post("/reset")
 def reset_tasks():
-    global tasks
-    global current_id
 
-    tasks=deepcopy(initial_tasks)
-    current_id=len(tasks)
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
 
-    return {"message":"Tasks reset successfully.",
-            "tasks":tasks}
+    # Delete all existing tasks
+    cursor.execute("DELETE FROM tasks")
 
+    # Insert the original tasks back into the database
+    for task in initial_tasks:
+        cursor.execute(
+            "INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)",
+            (task["id"], task["title"], task["done"])
+        )
+
+    connection.commit()
+
+    return {
+        "message": "Tasks reset successfully.",
+        "tasks": initial_tasks
+    }
 
