@@ -88,28 +88,58 @@ def get_tasks(done: bool = None, search: str = None):
 
         formatted_tasks.append(task)
 
-    return formatted_tasks
+    if done is not None:
+        filtered_tasks=[
+            task for task in formatted_tasks
+            if task["done"] == done
+        ]
+    else:
+        filtered_tasks=formatted_tasks
+
+    if search is not None:
+        filtered_tasks=[
+            task for task in filtered_tasks
+            if search.lower() in task["title"].lower()
+        ]
+    return filtered_tasks
 
 
 @app.get("/tasks/{task_id}",
-    tags=["Tasks"],
-    summary="Get a task by ID",
-    description="Returns a single task if it exists.")
+         tags=["Tasks"],
+         summary="Get a task by ID",
+         description="Returns a single task if it exists.")
 def get_task(task_id: int):
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Task {task_id} not found"
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "SELECT * FROM tasks WHERE id = ?",
+        (task_id,)
     )
 
+    row = cursor.fetchone()
 
-@app.post("/tasks",tags=["Tasks"],summary="Create a task",description="Creates a new task with the provided title.", status_code=status.HTTP_201_CREATED)
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found"
+        )
+
+    return {
+        "id": row[0],
+        "title": row[1],
+        "done": bool(row[2])
+    }
+
+@app.post(
+    "/tasks",
+    tags=["Tasks"],
+    summary="Create a task",
+    description="Creates a new task with the provided title.",
+    status_code=status.HTTP_201_CREATED
+)
 def create_task(task: TaskCreate):
-    global current_id
-    new_id=current_id + 1
 
     if not task.title.strip():
         raise HTTPException(
@@ -117,54 +147,98 @@ def create_task(task: TaskCreate):
             detail="Title is required"
         )
 
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        (task.title, False)
+    )
+
+    connection.commit()
+
+    new_id = cursor.lastrowid
+
     new_task = {
         "id": new_id,
         "title": task.title,
         "done": False
     }
 
-    tasks.append(new_task)
-    current_id=new_id  
-
     return new_task
-
 
 class TaskUpdate(BaseModel):
     title:str
     done:bool
 
-@app.put("/tasks/{task_id}", tags=["Tasks"], summary="Update a task", description="Updates the title and completion status of an existing task.")
-def update_task(task_id:int,updated_task:TaskUpdate):
+@app.put(
+    "/tasks/{task_id}",
+    tags=["Tasks"],
+    summary="Update a task",
+    description="Updates the title and completion status of an existing task."
+)
+def update_task(task_id: int, updated_task: TaskUpdate):
+
     if not updated_task.title.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Title is required"
         )
 
-    for task in tasks:
-        if task["id"] == task_id:
-            task["title"] = updated_task.title
-            task["done"] = updated_task.done
-            return task
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Task {task_id} not found"
+    cursor.execute(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        (updated_task.title, updated_task.done, task_id)
     )
 
-@app.delete("/tasks/{task_id}", tags=["Tasks"],summary="Delete a task",description="Deletes a task by its ID.", status_code=status.HTTP_204_NO_CONTENT)
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found"
+        )
+
+    connection.commit()
+
+    cursor.execute(
+        "SELECT * FROM tasks WHERE id = ?",
+        (task_id,)
+    )
+
+    row = cursor.fetchone()
+
+    return {
+        "id": row[0],
+        "title": row[1],
+        "done": bool(row[2])
+    }
+@app.delete(
+    "/tasks/{task_id}",
+    tags=["Tasks"],
+    summary="Delete a task",
+    description="Deletes a task by its ID.",
+    status_code=status.HTTP_204_NO_CONTENT
+)
 def delete_task(task_id: int):
 
-    for task in tasks:
-        if task["id"] == task_id:
-            tasks.remove(task)
-            return
+    connection = sqlite3.connect("tasks.db")
+    cursor = connection.cursor()
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Task {task_id} not found"
+    cursor.execute(
+        "DELETE FROM tasks WHERE id = ?",
+        (task_id,)
     )
 
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found"
+        )
+
+    connection.commit()
+
+    return
 @app.get("/stats",tags=["Tasks"],summary="Get task statistics",description="Returns statistics about the tasks.")
 def get_tasks():
     total=len(tasks)
