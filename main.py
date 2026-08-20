@@ -1,6 +1,26 @@
 import sqlite3
+import os
+import psycopg
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_postgres_connection():
+    return psycopg.connect(
+        host="localhost",
+        port=5432,
+        dbname=os.getenv("POSTGRES_DB"),
+        user="postgres",
+        password=os.getenv("POSTGRES_PASSWORD")
+    )
+
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
+
+if __name__ == "__main__":
+    connection = get_postgres_connection()
+    print("Successfully connected to PostgreSQL!")
+    connection.close()
 
 app = FastAPI(
     title="Task API",
