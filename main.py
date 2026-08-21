@@ -266,7 +266,7 @@ def get_stats():
     total_result = cursor.fetchone()
     total = total_result[0]
 
-    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = TRUE")
     done_result = cursor.fetchone()
     done = done_result[0]
 
