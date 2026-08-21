@@ -234,11 +234,11 @@ def update_task(task_id: int, updated_task: TaskUpdate):
 )
 def delete_task(task_id: int):
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "DELETE FROM tasks WHERE id = ?",
+        "DELETE FROM tasks WHERE id = %s",
         (task_id,)
     )
 
@@ -259,7 +259,7 @@ def delete_task(task_id: int):
 )
 def get_stats():
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM tasks")
