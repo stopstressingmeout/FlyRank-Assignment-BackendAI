@@ -123,11 +123,11 @@ def get_tasks(done: bool = None, search: str = None):
          description="Returns a single task if it exists.")
 def get_task(task_id: int):
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "SELECT * FROM tasks WHERE id = ?",
+        "SELECT * FROM tasks WHERE id = %s",
         (task_id,)
     )
 
@@ -160,17 +160,16 @@ def create_task(task: TaskCreate):
             detail="Title is required"
         )
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        "INSERT INTO tasks (title, done) VALUES (%s, %s) RETURNING id",
         (task.title, False)
     )
 
+    new_id = cursor.fetchone()[0]
     connection.commit()
-
-    new_id = cursor.lastrowid
 
     new_task = {
         "id": new_id,
@@ -198,11 +197,11 @@ def update_task(task_id: int, updated_task: TaskUpdate):
             detail="Title is required"
         )
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     cursor.execute(
-        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        "UPDATE tasks SET title = %s, done = %s WHERE id = %s",
         (updated_task.title, updated_task.done, task_id)
     )
 
@@ -215,7 +214,7 @@ def update_task(task_id: int, updated_task: TaskUpdate):
     connection.commit()
 
     cursor.execute(
-        "SELECT * FROM tasks WHERE id = ?",
+        "SELECT * FROM tasks WHERE id = %s",
         (task_id,)
     )
 
