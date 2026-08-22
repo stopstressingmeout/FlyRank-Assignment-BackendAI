@@ -280,7 +280,7 @@ def get_stats():
 @app.post("/reset")
 def reset_tasks():
 
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
 
     # Delete all existing tasks
@@ -289,7 +289,7 @@ def reset_tasks():
     # Insert the original tasks back into the database
     for task in initial_tasks:
         cursor.execute(
-            "INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)",
+            "INSERT INTO tasks (id, title, done) VALUES (%s, %s, %s)",
             (task["id"], task["title"], task["done"])
         )
 
