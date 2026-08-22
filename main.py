@@ -1,4 +1,3 @@
-import sqlite3
 import os
 import psycopg
 from dotenv import load_dotenv
@@ -44,26 +43,7 @@ initial_tasks = [
         "done": True
     }
 ]
-connection = sqlite3.connect("tasks.db")
-cursor = connection.cursor()
 
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY,
-        title TEXT,
-        done BOOLEAN
-    )
-""")
-cursor.execute("SELECT COUNT(*) FROM tasks")
-result = cursor.fetchone()
-if result[0] == 0:
-    for task in initial_tasks:
-        cursor.execute(
-            "INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)",
-            (task["id"], task["title"], task["done"])
-        )
-
-    connection.commit()
     
 class TaskCreate(BaseModel):
     title: str
@@ -85,7 +65,7 @@ def health_check():
 
 @app.get("/tasks",tags=["Tasks"],summary="Get filtered tasks",description="Returns a list of filtered tasks.")
 def get_tasks(done: bool = None, search: str = None):
-    connection = sqlite3.connect("tasks.db")
+    connection = get_postgres_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM tasks")
     rows = cursor.fetchall()
