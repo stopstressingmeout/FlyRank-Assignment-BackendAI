@@ -4,9 +4,9 @@ services:
     container_name: taskdb-compose
 
     environment:
-      POSTGRES_DB: tasks
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
       - "5432:5432"
@@ -21,15 +21,15 @@ services:
 
     environment:
       POSTGRES_HOST: db
-      POSTGRES_DB: tasks
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
       - "8000:8000"
 
     depends_on:
       - db
-      
+
 volumes:
   taskdata:
