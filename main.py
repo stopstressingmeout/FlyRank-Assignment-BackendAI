@@ -71,6 +71,33 @@ def get_profile(user=Depends(get_current_user)):
         "email": user.email
     }
 
+@app.get(
+    "/protected/dashboard",
+    tags=["Auth"],
+    summary="Get protected dashboard"
+)
+def get_dashboard(user=Depends(get_current_user)):
+    return {
+        "message": "Welcome to your protected dashboard.",
+        "email": user.email
+    }
+
+@app.post(
+    "/auth/logout",
+    tags=["Auth"],
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def logout(user=Depends(get_current_user)):
+    try:
+        supabase.auth.sign_out()
+        return
+
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not log out"
+        )
+
 def get_postgres_connection():
     return psycopg.connect(
         host=os.getenv("POSTGRES_HOST"),
