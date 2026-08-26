@@ -59,7 +59,58 @@ class TaskUpdate(BaseModel):
     title: str
     done: bool
 
+class AuthRequest(BaseModel):
+    email: str
+    password: str
 
+
+@app.post(
+    "/auth/signup",
+    tags=["Auth"],
+    status_code=status.HTTP_201_CREATED
+)
+def signup(request: AuthRequest):
+    try:
+        response = supabase.auth.sign_up({
+            "email": request.email,
+            "password": request.password
+        })
+
+        return {
+            "message": "User created successfully",
+            "user": response.user
+        }
+
+    except Exception as e:
+        print("SIGNUP ERROR:", repr(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@app.post(
+    "/auth/login",
+    tags=["Auth"]
+)
+def login(request: AuthRequest):
+    try:
+        response = supabase.auth.sign_in_with_password({
+            "email": request.email,
+            "password": request.password
+        })
+
+        return {
+            "access_token": response.session.access_token,
+            "token_type": "bearer"
+        }
+
+    except Exception as e:
+        print("LOGIN ERROR:", repr(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
 @app.get(
     "/",
     tags=["General"],
