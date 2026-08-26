@@ -1,12 +1,14 @@
 import os
 import psycopg
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from supabase import create_client, Client
 
 
 load_dotenv()
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -16,6 +18,37 @@ supabase: Client = create_client(
 )
 
 
+app = FastAPI(
+    title="Task API",
+    description="A simple CRUD API for managing tasks built with FastAPI.",
+    version="1.0.0"
+)
+
+@app.get(
+    "/public/info",
+    tags=["Auth"],
+    summary="Public information"
+)
+def public_info():
+    return {
+        "message": "Welcome stranger! This info is public."
+    }
+
+security = HTTPBearer()
+
+
+@app.get(
+    "/protected/profile",
+    tags=["Auth"],
+    summary="Protected profile"
+)
+def get_profile(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    return {
+        "message": "You have access to the protected route."
+    }
+
 def get_postgres_connection():
     return psycopg.connect(
         host=os.getenv("POSTGRES_HOST"),
@@ -24,14 +57,6 @@ def get_postgres_connection():
         user=os.getenv("POSTGRES_USER"),
         password=os.getenv("POSTGRES_PASSWORD")
     )
-
-app = FastAPI(
-    title="Task API",
-    description="A simple CRUD API for managing tasks built with FastAPI.",
-    version="1.0.0"
-)
-
-
 initial_tasks = [
     {
         "id": 1,
