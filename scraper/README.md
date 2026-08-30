@@ -44,6 +44,16 @@ A normalized `price_gbp` value will also be produced during processing.
 
 ### Robots.txt Check
 
+## Stage 1 — Fetch and Cache
+
+The scraper fetches the first catalogue page and stores the returned HTML locally.
+
+The first execution downloads the page:
+
+```text
+FETCH https://books.toscrape.com/catalogue/page-1.html
+SAVED F:\Projects\Flyrank_Api\scraper\cache\catalogue-page-1.html
+
 The site's `robots.txt` was checked before implementing the scraper.
 
 **Result:** [WRITE YOUR ACTUAL RESULT HERE]
