@@ -2,7 +2,7 @@
 
 Week 5 – Assignment A9
 
-A Python scraping pipeline that downloads the first three catalogue pages of Books to Scrape, discovers the 60 book pages, extracts book information, normalizes and validates the data, stores valid records as JSON, handles failed pages, and generates a run report.
+A Python scraping pipeline for Books to Scrape. It discovers book pages from the first three catalogue pages, extracts book information, normalizes and validates the data, stores valid records as JSON, handles failed pages, and generates a run report.
 
 ## Target Classification
 
@@ -18,48 +18,45 @@ Books to Scrape is a public practice sandbox designed for learning and practicin
 
 ### Scope
 
-This scraper will process only the **first three catalogue pages** of Books to Scrape.
+This scraper processes only the **first three catalogue pages** of Books to Scrape.
 
-The expected scope is:
+Expected scope:
 
 - 3 catalogue pages
-- 60 unique book pages
+- 60 valid book records
+- book URLs are discovered from the catalogue pages
+- pagination is followed from the site's own `next` link
+- book URLs are not hardcoded
 
-The scraper will not hardcode the 60 book URLs. It will discover the book URLs from the catalogue pages and follow the site's own pagination.
+## Data Collected
 
-### Data Collected
-
-The scraper will collect the following information from each book page:
+Each valid book record contains:
 
 - `title`
 - `product_url`
+- `upc`
 - `price_text`
+- `price_gbp`
 - `availability_text`
 - `rating_text`
 - `description`
 - `source_page`
 - `fetched_at`
 
-A normalized `price_gbp` value will also be produced during processing.
+The raw `price_text` is retained alongside the normalized numeric `price_gbp` value.
 
-### Robots.txt Check
+## Record Schema
 
-## Stage 1 — Fetch and Cache
-
-The scraper fetches the first catalogue page and stores the returned HTML locally.
-
-The first execution downloads the page:
+Records are validated with Pydantic before being written to `books.json`.
 
 ```text
-FETCH https://books.toscrape.com/catalogue/page-1.html
-SAVED F:\Projects\Flyrank_Api\scraper\cache\catalogue-page-1.html
-
-The site's `robots.txt` was checked before implementing the scraper.
-
-**Result:** [WRITE YOUR ACTUAL RESULT HERE]
-
-### Why This Target Is Appropriate
-
-Books to Scrape is a public practice sandbox intended for scraping practice, making it appropriate for this assignment.
-
-I will not reuse this code on another site without checking its rules and terms first.
+title: str
+product_url: HttpUrl
+upc: str
+price_text: str
+price_gbp: float
+availability_text: str
+rating_text: str
+description: str | None
+source_page: HttpUrl
+fetched_at: datetime
