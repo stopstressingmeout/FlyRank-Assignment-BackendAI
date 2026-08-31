@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from scraper.src.main import (
     discover_book_urls,
     parse_description,
@@ -62,8 +60,6 @@ def test_duplicate_urls_can_be_removed():
 
 
 def test_malformed_price_raises_error():
-    from scraper.src.main import parse_price_gbp
-
     try:
         parse_price_gbp("not-a-price")
     except ValueError:
