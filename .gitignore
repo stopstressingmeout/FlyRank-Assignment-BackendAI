@@ -2,3 +2,5 @@ __pycache__
 venv
 tasks.db
 .env
+scraper/cache/
+scraper/output/
