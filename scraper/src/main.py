@@ -301,8 +301,6 @@ def main():
         book_cache = cache_file_for_book(book_url)
 
         try:
-            before_fetch = book_cache.exists()
-
             book_html = fetch_page(
                 book_url,
                 book_cache,
@@ -365,7 +363,7 @@ def main():
         "unique_urls": len(book_urls),
         "valid_records": len(valid_records),
         "invalid_records": len(errors),
-        "failed_pages": len(errors),
+        "failed_pages":0,
     }
 
     write_json(
