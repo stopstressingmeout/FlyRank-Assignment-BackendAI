@@ -291,9 +291,10 @@ def main():
     started_at = datetime.now(timezone.utc)
 
     catalogue_pages, book_urls = discover_three_pages()
-
-    valid_records = []
-    errors = []
+    valid_records=[]
+    errors=[]
+    pages_fetched=0
+    cache_hits=0
 
     for index, book_url in enumerate(book_urls, start=1):
         print(f"BOOK {index}/{len(book_urls)}")
@@ -301,10 +302,15 @@ def main():
         book_cache = cache_file_for_book(book_url)
 
         try:
+            before_fetch = book_cache.exists()
             book_html = fetch_page(
                 book_url,
                 book_cache,
-            )
+    )
+            if before_fetch:
+                cache_hits += 1
+            else:
+                pages_fetched += 1
 
             fetched_at = datetime.now(timezone.utc)
 
@@ -363,8 +369,10 @@ def main():
         "unique_urls": len(book_urls),
         "valid_records": len(valid_records),
         "invalid_records": len(errors),
-        "failed_pages":0,
-    }
+        "pages_fetched": pages_fetched,
+        "cache_hits": cache_hits,
+        "failed_pages": len(errors),
+        }
 
     write_json(
         OUTPUT_DIR / "run-report.json",
